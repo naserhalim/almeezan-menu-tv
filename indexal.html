@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Al Meezan Menu</title>
+  <style>
+    :root{
+      --bg:#0b0b0f;
+      --card:#12121a;
+      --text:#f5f5f7;
+      --muted:#b7b7c2;
+      --gold:#f2c94c;
+      --accent:#2dd4bf;
+      --border:rgba(255,255,255,.08);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(242,201,76,.12), transparent 60%),
+                  radial-gradient(900px 600px at 90% 20%, rgba(45,212,191,.10), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    header{
+      padding:32px 40px 18px;
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      border-bottom:1px solid var(--border);
+    }
+    .title{
+      font-size:54px;
+      font-weight:800;
+      letter-spacing:.5px;
+      color:var(--gold);
+      line-height:1;
+    }
+    .subtitle{
+      font-size:18px;
+      color:var(--muted);
+      margin-top:8px;
+    }
+    .clock{
+      text-align:right;
+      color:var(--muted);
+      font-size:18px;
+    }
+    .wrap{
+      padding:26px 40px 40px;
+      display:grid;
+      grid-template-columns: 1fr 1fr; /* perfect for 32" landscape */
+      gap:22px;
+    }
+    .section{
+      background:rgba(18,18,26,.75);
+      border:1px solid var(--border);
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,.30);
+    }
+    .section-head{
+      padding:16px 18px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      background: linear-gradient(90deg, rgba(242,201,76,.16), rgba(45,212,191,.10));
+      border-bottom:1px solid var(--border);
+    }
+    .section-title{
+      font-size:28px;
+      font-weight:800;
+      letter-spacing:.3px;
+    }
+    .badge{
+      font-size:14px;
+      color:var(--muted);
+      border:1px solid var(--border);
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(0,0,0,.22);
+    }
+    .items{
+      padding:14px 14px 18px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .item{
+      display:grid;
+      grid-template-columns: 84px 1fr auto;
+      gap:14px;
+      align-items:center;
+      padding:12px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:rgba(0,0,0,.18);
+    }
+    .img{
+      width:84px;height:84px;
+      border-radius:14px;
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      font-size:12px;
+      text-align:center;
+      padding:6px;
+    }
+    .img img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .name{
+      font-size:24px;
+      font-weight:800;
+      line-height:1.15;
+    }
+    .note{
+      margin-top:6px;
+      font-size:16px;
+      color:var(--muted);
+    }
+    .price{
+      font-size:26px;
+      font-weight:900;
+      color:var(--accent);
+      padding-left:10px;
+      white-space:nowrap;
+    }
+    .soldout{
+      opacity:.45;
+      filter:grayscale(1);
+    }
+    .soldout .price{
+      color:#ff6b6b;
+    }
+    footer{
+      position:fixed;
+      bottom:0; left:0; right:0;
+      padding:10px 40px;
+      border-top:1px solid var(--border);
+      background:rgba(11,11,15,.70);
+      backdrop-filter: blur(8px);
+      display:flex;
+      justify-content:space-between;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .error{
+      padding:18px;
+      color:#ffb4b4;
+      font-size:18px;
+      line-height:1.4;
+    }
+    @media (max-width: 1100px){
+      .wrap{grid-template-columns:1fr}
+      .title{font-size:44px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="title">Al Meezan Menu</div>
+      <div class="subtitle">Fresh • Halal • Made with care</div>
+    </div>
+    <div class="clock" id="clock">--:--</div>
+  </header>
+
+  <main class="wrap" id="menu">
+    <!-- sections go here -->
+  </main>
+
+  <footer>
+    <div id="status">Loading…</div>
+    <div>Tip: Update prices in Firebase → TV updates automatically</div>
+  </footer>
+
+  <!-- Firebase (v9 modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import {
+      getFirestore, collection, onSnapshot, query
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    // ✅ PASTE YOUR FIREBASE CONFIG HERE
+    const firebaseConfig = {
+      apiKey: "PASTE_HERE",
+      authDomain: "PASTE_HERE",
+      projectId: "PASTE_HERE",
+      storageBucket: "PASTE_HERE",
+      messagingSenderId: "PASTE_HERE",
+      appId: "PASTE_HERE"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const menuEl = document.getElementById("menu");
+    const statusEl = document.getElementById("status");
+
+    function money(v){
+      if (v === null || v === undefined || v === "") return "";
+      const n = Number(v);
+      if (Number.isNaN(n)) return String(v);
+      return "$" + n.toFixed(2);
+    }
+
+    function groupByCategory(items){
+      const map = new Map();
+      for (const it of items){
+        const cat = (it.category || "Other").trim();
+        if (!map.has(cat)) map.set(cat, []);
+        map.get(cat).push(it);
+      }
+      // sort categories A-Z
+      return [...map.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+    }
+
+    function render(items){
+      // Only show available items by default (if field exists)
+      // If you want to show sold out too, keep them but style them.
+      const grouped = groupByCategory(items);
+
+      menuEl.innerHTML = "";
+      for (const [cat, list] of grouped){
+        // sort items by optional "order" then name
+        list.sort((a,b)=>{
+          const ao = (a.order ?? 9999), bo = (b.order ?? 9999);
+          if (ao !== bo) return ao - bo;
+          return (a.name||"").localeCompare(b.name||"");
+        });
+
+        const section = document.createElement("section");
+        section.className = "section";
+
+        const head = document.createElement("div");
+        head.className = "section-head";
+        head.innerHTML = `
+          <div class="section-title">${cat}</div>
+          <div class="badge">${list.length} items</div>
+        `;
+
+        const itemsWrap = document.createElement("div");
+        itemsWrap.className = "items";
+
+        for (const it of list){
+          const available = (it.available === undefined) ? true : Boolean(it.available);
+          const row = document.createElement("div");
+          row.className = "item" + (available ? "" : " soldout");
+
+          const img = document.createElement("div");
+          img.className = "img";
+          if (it.imageUrl && String(it.imageUrl).trim() !== ""){
+            const imgtag = document.createElement("img");
+            imgtag.src = it.imageUrl;
+            imgtag.alt = it.name || "Menu item";
+            img.appendChild(imgtag);
+          } else {
+            img.textContent = "No image";
+          }
+
+          const info = document.createElement("div");
+          info.innerHTML = `
+            <div class="name">${it.name || "Unnamed item"}</div>
+            ${it.note ? `<div class="note">${it.note}</div>` : ""}
+          `;
+
+          const price = document.createElement("div");
+          price.className = "price";
+          price.textContent = money(it.price);
+
+          row.appendChild(img);
+          row.appendChild(info);
+          row.appendChild(price);
+
+          itemsWrap.appendChild(row);
+        }
+
+        section.appendChild(head);
+        section.appendChild(itemsWrap);
+        menuEl.appendChild(section);
+      }
+
+      statusEl.textContent = `Last update: ${new Date().toLocaleTimeString()}`;
+    }
+
+    function showError(msg){
+      menuEl.innerHTML = `<div class="error">${msg}</div>`;
+      statusEl.textContent = "Error";
+    }
+
+    // Live updates from Firestore collection: almeezan
+    try{
+      const q = query(collection(db, "almeezan"));
+      onSnapshot(q, (snap)=>{
+        const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        render(items);
+      }, (err)=>{
+        console.error(err);
+        showError("Could not load menu. Check Firebase rules and config.");
+      });
+    }catch(e){
+      console.error(e);
+      showError("Setup error. Paste firebaseConfig correctly.");
+    }
+
+    // Clock (top right)
+    const clockEl = document.getElementById("clock");
+    function tick(){
+      const now = new Date();
+      clockEl.textContent = now.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+    }
+    tick(); setInterval(tick, 1000);
+
+    // Hard refresh every 5 minutes (good for TV stability)
+    setInterval(()=>location.reload(), 5 * 60 * 1000);
+  </script>
+</body>
+</html>
